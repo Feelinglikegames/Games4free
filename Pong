@@ -1,0 +1,241 @@
+pragma solidity ^0.4.25;
+contract starter{
+    enum StateType{
+        GameProvisioned, Pingponging, GameFinished
+    }
+
+    StateType public State;
+
+    string public PingPongGameName;
+    address public GameStrater;
+    address public GamePlayer;
+    int public PingPongTimes;
+
+    constructor (string gameName) public{
+        PingPongGameName = gameName;
+        GameStrater = msg.sender;
+
+        GamePlayer = new Player(PingPongGameName);
+
+        State = StateType.GameProvisioned;
+    }
+
+    function StartPingPong (int pingPongTimes) public{
+        PingPongTimes = pingPongTimes;
+        Player player = Player(GamePlayer);
+        State = StateType.Pingponging;
+        Player.Pong(pingPongTimes);
+    }
+
+    function Pong(int currentPingPongTimes) public{
+        currentPingPongTimes = currentPingPongTimes - 1;
+        Player player = Player(GamePlayer);
+
+        if(currentPingPongTimes > 0){
+            State = StateType.Pingponging;
+            player.Ping(currentPingPongTimes);
+        }
+        else{
+            State = StateType.GameFinished;
+            player.FinishGame();
+        }    
+    }
+
+    function FinishGame() public{
+        State = StateType.GameFinished;
+    }
+}
+
+contract Player{
+    enum StateType{
+        PingPongPlayerCreated, PingPonging, GameFinished}
+
+        StateType public State;
+
+        address public GameStrater;
+        string public PingPongGameName;
+
+
+    constructor(string PingPongGameName) public{
+        GameStrater = msg.sender;
+        PingPongGameName = PingPongGameName;
+
+        State = StateType.PingPongPlayerCreated;
+    }
+
+    function ping(int currentPingPongTimes) public{
+        currentPingPongTimes = currentPingPongTimes - 1;
+
+        starter Starter = starter(msg.sender);
+
+        if(currentPingPongTimes > 0){
+            State = StateType.PingPonging;
+            starter.Pong(currentPingPongTimes);
+        }
+
+        else{
+            State = StateType.GameFinished;
+            starter.FinishGame();
+        }
+    }
+
+    function FinishGame() public{
+        State = StateType.GameFinished;
+    }
+}
+ 65 changes: 65 additions & 0 deletions65  
+ballot.sol
+@@ -0,0 +1,65 @@
+pragma solidity >=0.4.22 <0.6.0;
+contract Ballot {
+
+    struct Voter {
+        uint weight;
+        bool voted;
+        uint8 vote;
+        address delegate;
+    }
+    struct Proposal {
+        uint voteCount;
+    }
+
+    address chairperson;
+    mapping(address => Voter) voters;
+    Proposal[] proposals;
+
+    /// Create a new ballot with $(_numProposals) different proposals.
+    constructor(uint8 _numProposals) public {
+        chairperson = msg.sender;
+        voters[chairperson].weight = 1;
+        proposals.length = _numProposals;
+    }
+
+    /// Give $(toVoter) the right to vote on this ballot.
+    /// May only be called by $(chairperson).
+    function giveRightToVote(address toVoter) public {
+        if (msg.sender != chairperson || voters[toVoter].voted) return;
+        voters[toVoter].weight = 1;
+    }
+
+    /// Delegate your vote to the voter $(to).
+    function delegate(address to) public {
+        Voter storage sender = voters[msg.sender]; // assigns reference
+        if (sender.voted) return;
+        while (voters[to].delegate != address(0) && voters[to].delegate != msg.sender)
+            to = voters[to].delegate;
+        if (to == msg.sender) return;
+        sender.voted = true;
+        sender.delegate = to;
+        Voter storage delegateTo = voters[to];
+        if (delegateTo.voted)
+            proposals[delegateTo.vote].voteCount += sender.weight;
+        else
+            delegateTo.weight += sender.weight;
+    }
+
+    /// Give a single vote to proposal $(toProposal).
+    function vote(uint8 toProposal) public {
+        Voter storage sender = voters[msg.sender];
+        if (sender.voted || toProposal >= proposals.length) return;
+        sender.voted = true;
+        sender.vote = toProposal;
+        proposals[toProposal].voteCount += sender.weight;
+    }
+
+    function winningProposal() public view returns (uint8 _winningProposal) {
+        uint256 winningVoteCount = 0;
+        for (uint8 prop = 0; prop < proposals.length; prop++)
+            if (proposals[prop].voteCount > winningVoteCount) {
+                winningVoteCount = proposals[prop].voteCount;
+                _winningProposal = prop;
+            }
+    }
+}
+ 85 changes: 85 additions & 0 deletions85  
+ballot_test.sol
+@@ -0,0 +1,85 @@
+pragma solidity ^0.4.25;
+contract starter{
+    enum StateType{
+        GameProvisioned, Pingponging, GameFinished
+    }
+
+    StateType public State;
+
+    string public PingPongGameName;
+    address public GameStrater;
+    address public GamePlayer;
+    int public PingPongTimes;
+
+    constructor (string gameName) public{
+        PingPongGameName = gameName;
+        GameStrater = msg.sender;
+
+        GamePlayer = new Player(PingPongGameName);
+
+        State = StateType.GameProvisioned;
+    }
+
+    function StartPingPong (int pingPongTimes) public{
+        PingPongTimes = pingPongTimes;
+        Player player = Player(GamePlayer);
+        State = StateType.Pingponging;
+        Player.Ping(pingPongTimes);
+    }
+
+    function Pong(int currentPingPongTimes) public{
+        currentPingPongTimes = currentPingPongTimes - 1;
+        Player player = Player(GamePlayer);
+
+        if(current PingPongTimes > 0){
+            State = StateType.Pingponging;
+            player.Ping(current PingPongTimes);
+        }
+        else{
+            State = StateType.GameFinished;
+            player.FinishGame();
+        }    
+    }
+
+    fuction FinishGame() public{
+        State = stateType.GameFinished;
+    }
+}
+
+contract Player{
+    enum StateType{
+        PingPongPlayerCreated, PingPonging, GameFinished
+
+        StateType public State;
+
+        address public GameStrater;
+        string public PingPongGameName;
+    }
+
+    constructor(string PingPongGameName) public{
+        GameStrater = msg.sender;
+        PingPongGameName = pingPongGameName;
+
+        State = StateType.PingPongPlayerCreated;
+    }
+
+    function ping(int currentPingPongTimes) public{
+        currentPingPongTimes = currentPingPongTimes - 1;
+
+        Strater strater = Strater(msg.sender);
+
+        if(currentPingPongtimes > 0){
+            State = StateType.PingPonging;
+            Strater.Pong(currentPingPongtimes);
+        }
+
+        else{
+            State = StateType.GameFinished;
+            Strater.FinishGame();
+        }
+    }
+
+    Function FinishGame() public{
+        State = StateType.GameFinished;
+    }
+}
